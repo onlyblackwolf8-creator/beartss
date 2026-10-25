@@ -1,0 +1,507 @@
+
+import { useEffect, useState } from 'react';
+
+const API_URL = 'http://localhost:5000/api';
+
+const SOCIAL_LINKS = {
+  instagram: 'https://www.instagram.com/_be.arts/',
+  tiktok: 'https://vm.tiktok.com/ZS9UGMtFeSuYK-pOpax/',
+  whatsapp:
+    'https://wa.me/254720661462?text=Hello%20BEARTS%2C%20I%27m%20interested%20in%20your%20artwork.',
+};
+
+function SocialLinks({ footer = false }) {
+  return (
+    <div className={`social-links${footer ? ' footer-social-links' : ''}`}>
+      <a
+        href={SOCIAL_LINKS.instagram}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Instagram
+      </a>
+
+      <a
+        href={SOCIAL_LINKS.tiktok}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        TikTok
+      </a>
+
+      <a
+        href={SOCIAL_LINKS.whatsapp}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        WhatsApp
+      </a>
+    </div>
+  );
+}
+
+export default function App() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const [orderForm, setOrderForm] = useState({
+    name: '',
+    email: '',
+    artworkType: '',
+    size: 'Standard',
+    message: '',
+  });
+
+  const [commissionForm, setCommissionForm] = useState({
+    name: '',
+    email: '',
+    projectType: '',
+    details: '',
+  });
+
+  const [orderStatus, setOrderStatus] = useState('');
+  const [commissionStatus, setCommissionStatus] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchProducts() {
+      try {
+        const response = await fetch(`${API_URL}/products`);
+
+        if (!response.ok) {
+          throw new Error('Unable to load artwork right now.');
+        }
+
+        const data = await response.json();
+
+        if (!cancelled) {
+          setProducts(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        console.error('Failed to load products:', error);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchProducts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function updateOrderForm(event) {
+    const { name, value } = event.target;
+
+    setOrderForm((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+  }
+
+  function updateCommissionForm(event) {
+    const { name, value } = event.target;
+
+    setCommissionForm((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+  }
+
+  async function handleOrderSubmit(event) {
+    event.preventDefault();
+    setOrderStatus('Sending your order...');
+
+    try {
+      const response = await fetch(`${API_URL}/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderForm),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to place order.');
+      }
+
+      setOrderStatus(data.message || 'Your order was submitted successfully.');
+
+      setOrderForm({
+        name: '',
+        email: '',
+        artworkType: '',
+        size: 'Standard',
+        message: '',
+      });
+    } catch (error) {
+      setOrderStatus(
+        `${error.message} You can also contact us through WhatsApp.`
+      );
+    }
+  }
+
+  async function handleCommissionSubmit(event) {
+    event.preventDefault();
+    setCommissionStatus('Sending your commission request...');
+
+    try {
+      const response = await fetch(`${API_URL}/commission`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(commissionForm),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || 'Failed to send commission request.'
+        );
+      }
+
+      setCommissionStatus(
+        data.message || 'Your commission request was submitted successfully.'
+      );
+
+      setCommissionForm({
+        name: '',
+        email: '',
+        projectType: '',
+        details: '',
+      });
+    } catch (error) {
+      setCommissionStatus(
+        `${error.message} You can also contact us through WhatsApp.`
+      );
+    }
+  }
+
+  return (
+    <div className="app-shell">
+      <header className="topbar">
+        <div className="container nav">
+          <a href="#home" className="logo" aria-label="BEARTS home">
+            BEARTS
+          </a>
+
+          <nav className="menu" aria-label="Main navigation">
+            <a href="#home">Home</a>
+            <a href="#collection">Collection</a>
+            <a href="#commissions">Commissions</a>
+            <a href="#about">About</a>
+            <a href="#contact">Contact</a>
+          </nav>
+
+          <a href="#contact" className="btn btn-primary">
+            Order Art
+          </a>
+        </div>
+      </header>
+
+      <main id="home">
+        <section className="hero">
+          <div className="container hero-grid">
+            <div className="hero-copy">
+              <span className="badge">Original art studio</span>
+
+              <h1>Art that makes your space feel alive.</h1>
+
+              <p>
+                BEARTS creates original paintings, custom commissions, and
+                collectible art for homes, offices, and meaningful gifts.
+              </p>
+
+              <div className="hero-actions">
+                <a href="#collection" className="btn btn-primary">
+                  Shop Collection
+                </a>
+
+                <a href="#commissions" className="btn btn-secondary">
+                  Commission a Piece
+                </a>
+              </div>
+            </div>
+
+            <div className="hero-visual">
+              <div className="art-card">
+                <div className="art-image" />
+
+                <div className="floating-card">
+                  <strong>Featured Piece</strong>
+                  <span>Warm Horizon — KSh 420</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="collection" className="section">
+          <div className="container">
+            <div className="section-head">
+              <h2>Featured works</h2>
+
+              <a href="#contact" className="btn btn-secondary">
+                Enquire about artwork
+              </a>
+            </div>
+
+            {loading ? (
+              <p>Loading artwork...</p>
+            ) : products.length === 0 ? (
+              <p>
+                Artwork is temporarily unavailable. Please check back later or
+                contact us about a custom piece.
+              </p>
+            ) : (
+              <div className="product-grid">
+                {products.map((product) => (
+                  <article key={product.id} className="product-card">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      loading="lazy"
+                    />
+
+                    <div className="product-info">
+                      <div className="product-row">
+                        <h3>{product.name}</h3>
+
+                        <span>
+                          KSh{' '}
+                          {Number(product.price || 0).toLocaleString('en-KE')}
+                        </span>
+                      </div>
+
+                      <p>{product.category}</p>
+
+                      <a
+                        className="art-order-link"
+                        href={`${SOCIAL_LINKS.whatsapp}&type=custom`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Enquire on WhatsApp
+                      </a>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section id="commissions" className="section">
+          <div className="container commission-box">
+            <div>
+              <span className="badge">Custom art</span>
+
+              <h2>Commission a piece made just for you</h2>
+
+              <p>
+                Whether you want a portrait, abstract work, or art for a
+                special room, we create custom pieces tailored to your story,
+                space, and style.
+              </p>
+
+              <p>
+                Prefer a direct conversation? Send us your idea on WhatsApp.
+              </p>
+
+              <a
+                className="btn btn-secondary"
+                href={SOCIAL_LINKS.whatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Chat on WhatsApp
+              </a>
+            </div>
+
+            <form className="order-form" onSubmit={handleCommissionSubmit}>
+              <input
+                type="text"
+                name="name"
+                placeholder="Your name"
+                autoComplete="name"
+                value={commissionForm.name}
+                onChange={updateCommissionForm}
+                required
+              />
+
+              <input
+                type="email"
+                name="email"
+                placeholder="Email address"
+                autoComplete="email"
+                value={commissionForm.email}
+                onChange={updateCommissionForm}
+                required
+              />
+
+              <input
+                type="text"
+                name="projectType"
+                placeholder="Project type"
+                value={commissionForm.projectType}
+                onChange={updateCommissionForm}
+                required
+              />
+
+              <textarea
+                name="details"
+                rows="4"
+                placeholder="Tell us about your vision..."
+                value={commissionForm.details}
+                onChange={updateCommissionForm}
+                required
+              />
+
+              <button type="submit" className="btn btn-primary">
+                Request a quote
+              </button>
+
+              {commissionStatus && (
+                <p className="status-message" role="status">
+                  {commissionStatus}
+                </p>
+              )}
+            </form>
+          </div>
+        </section>
+
+        <section id="about" className="section">
+          <div className="container about">
+            <div className="about-card">
+              <h2>About BEARTS</h2>
+
+              <p>
+                BEARTS is an art studio focused on emotion, texture, and
+                story-driven design. Each piece is created with intention —
+                whether it is a collectible original or a custom work made
+                for a meaningful place in someone's life.
+              </p>
+
+              <p>
+                Follow our creative journey and discover more original
+                artwork on social media.
+              </p>
+
+              <SocialLinks />
+            </div>
+          </div>
+        </section>
+
+        <section id="contact" className="section">
+          <div className="container contact-box">
+            <div className="contact-copy">
+              <span className="badge">Order / Contact</span>
+
+              <h2>Get your custom art project started</h2>
+
+              <p>
+                Have an idea for a portrait or original artwork? Contact
+                BEARTS using your preferred channel.
+              </p>
+
+              <h3>Connect with BEARTS</h3>
+
+              <SocialLinks />
+
+              <p>
+                <strong>WhatsApp:</strong> +254 720 661 462
+              </p>
+            </div>
+
+            <form className="order-form" onSubmit={handleOrderSubmit}>
+              <input
+                type="text"
+                name="name"
+                placeholder="Your name"
+                autoComplete="name"
+                value={orderForm.name}
+                onChange={updateOrderForm}
+                required
+              />
+
+              <input
+                type="email"
+                name="email"
+                placeholder="Email address"
+                autoComplete="email"
+                value={orderForm.email}
+                onChange={updateOrderForm}
+                required
+              />
+
+              <input
+                type="text"
+                name="artworkType"
+                placeholder="Artwork type"
+                value={orderForm.artworkType}
+                onChange={updateOrderForm}
+                required
+              />
+
+              <select
+                name="size"
+                value={orderForm.size}
+                onChange={updateOrderForm}
+              >
+                <option value="Standard">Standard</option>
+                <option value="Small">Small</option>
+                <option value="Medium">Medium</option>
+                <option value="Large">Large</option>
+              </select>
+
+              <textarea
+                name="message"
+                rows="4"
+                placeholder="Add notes for your order..."
+                value={orderForm.message}
+                onChange={updateOrderForm}
+              />
+
+              <button type="submit" className="btn btn-primary">
+                Place Order
+              </button>
+
+              {orderStatus && (
+                <p className="status-message" role="status">
+                  {orderStatus}
+                </p>
+              )}
+            </form>
+          </div>
+        </section>
+      </main>
+
+      <footer className="footer">
+        <div className="container">
+          <p>© 2026 BEARTS — Original art and custom commissions</p>
+
+          <SocialLinks footer />
+
+          <p>
+            For artwork enquiries and commissions, reach us on WhatsApp at{' '}
+            <a
+              href={SOCIAL_LINKS.whatsapp}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              +254 720 661 462
+            </a>
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
+}
